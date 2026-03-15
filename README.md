@@ -1,87 +1,154 @@
-# Welcome to React Router!
+# Bookified
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Bookified is a voice-first reading companion that turns static PDFs into interactive AI conversations.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+It allows users to upload a book, process it into searchable segments, and discuss the content through a live Vapi-powered voice session.
 
-## Features
+## What Recruiters Should Know
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+This project demonstrates end-to-end product engineering across frontend UX, backend APIs, auth, storage, retrieval, and real-time voice interaction.
 
-## Getting Started
+- Built with Next.js App Router and TypeScript.
+- Uses Clerk for authentication and route protection.
+- Upload pipeline uses Vercel Blob with secure token generation.
+- PDF parsing and segmentation are done before retrieval.
+- Voice sessions are tracked and persisted in MongoDB.
+- Assistant responses are grounded with relevant book segments.
 
-### Installation
+## Product Screenshots
 
-Install the dependencies:
+### 1) Library Dashboard
+
+Shows uploaded books and onboarding flow for new uploads.
+
+![Bookified Library](public/assets/Screenshot%202026-03-13%20111219.png)
+
+### 2) Add New Book Flow
+
+Upload PDF, optional cover, metadata, and assistant voice selection.
+
+![Bookified Upload Form](public/assets/Screenshot%202026-03-13%20111247.png)
+
+### 3) Live Voice Interview Session
+
+Real-time status, transcript stream, and ongoing conversation with the selected book.
+
+![Bookified Voice Session](public/assets/Screenshot%202026-03-13%20111357.png)
+
+## Core Features
+
+- PDF upload with validation (file type and size).
+- Optional manual cover upload, with auto cover generated from the first PDF page.
+- Duplicate detection using slug-based book existence checks.
+- Book text segmentation for retrieval-based responses.
+- Voice persona selection for interview style.
+- Real-time conversation states: `idle`, `connecting`, `starting`, `listening`, `thinking`, `speaking`.
+- Transcript experience with partial and final user/assistant messages.
+- Session start/end logging with duration tracking.
+- Search API for Vapi tool/function calls (`searchBook`).
+
+## How It Works
+
+1. User signs in with Clerk.
+2. User uploads a PDF from `/books/new`.
+3. Client parses the PDF, creates text segments, and generates/fetches cover image.
+4. Files are uploaded to Vercel Blob via `/api/upload`.
+5. Book metadata and segments are stored in MongoDB.
+6. User opens `/books/[slug]` and starts a voice session.
+7. Vapi calls `/api/vapi/search-book` to fetch relevant segments.
+8. Assistant responds using retrieved context from the uploaded book.
+
+## System Flow Diagram
+
+![System Flow Diagram](public/assets/system-flow-diagram.png)
+
+
+## Tech Stack
+
+- Framework: Next.js 16 (App Router)
+- Language: TypeScript
+- UI: React 19, Tailwind CSS, shadcn/ui, Sonner
+- Auth: Clerk
+- Database: MongoDB + Mongoose
+- File Storage: Vercel Blob
+- Voice: Vapi Web SDK + ElevenLabs voices
+- Validation: Zod + React Hook Form
+
+## Key Project Structure
+
+```text
+app/
+  (root)/
+    page.tsx                 # Library page
+    books/new/page.tsx       # Upload flow
+    books/[slug]/page.tsx    # Voice interview page
+  api/
+    upload/route.ts          # Blob upload token generation
+    vapi/search-book/route.ts
+
+components/
+  UploadForm.tsx
+  VapiControls.tsx
+  Transcript.tsx
+
+hooks/
+  useVapi.ts
+
+lib/actions/
+  book.actions.ts
+  session.actions.ts
+
+database/models/
+  book.model.ts
+  book-segment.model.ts
+  voice-session.model.ts
+```
+
+## Environment Variables
+
+Create a `.env` file in the root with:
+
+```env
+MONGODB_URI=
+bookified_READ_WRITE_TOKEN=
+NEXT_PUBLIC_VAPI_API_KEY=
+NEXT_PUBLIC_ASSISTANT_ID=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+```
+
+## Run Locally
 
 ```bash
 npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Open `http://localhost:3000`.
 
-## Building for Production
-
-Create a production build:
+## Build and Lint
 
 ```bash
 npm run build
+npm run lint
 ```
 
-## Deployment
+## API Endpoints
 
-### Docker Deployment
+- `POST /api/upload`: Authenticated upload token flow for Vercel Blob.
+- `GET /api/vapi/search-book`: Health check endpoint.
+- `POST /api/vapi/search-book`: Handles Vapi tool/function calls and returns relevant book context.
 
-To build and run using Docker:
+## Engineering Highlights
 
-```bash
-docker build -t my-app .
+- Clean separation of concerns between UI, hooks, server actions, and API routes.
+- Defensive request parsing and validation in tool-call endpoint.
+- Fallback retrieval strategy (text search first, regex fallback).
+- Error-aware call lifecycle management for robust real-time UX.
 
-# Run the container
-docker run -p 3000:3000 my-app
-```
+## Next Improvements
 
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+- Add usage quotas and subscription limits.
+- Add automated tests (unit + integration).
+- Add semantic embedding search for better long-context retrieval.
+- Add analytics dashboard for user reading/interview behavior.
