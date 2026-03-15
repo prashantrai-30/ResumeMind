@@ -1,154 +1,155 @@
-# Bookified
+# ResumeMind
 
-Bookified is a voice-first reading companion that turns static PDFs into interactive AI conversations.
+ResumeMind is an AI-powered resume reviewer that helps candidates improve resume quality before applying.
+It analyzes a PDF resume against a target role and job description, then returns structured feedback with ATS scoring, category-level breakdowns, and actionable improvement tips.
 
-It allows users to upload a book, process it into searchable segments, and discuss the content through a live Vapi-powered voice session.
+## Why ResumeMind
 
-## What Recruiters Should Know
+Recruiters and ATS systems filter resumes quickly.
+ResumeMind gives a fast pre-screen so candidates can:
 
-This project demonstrates end-to-end product engineering across frontend UX, backend APIs, auth, storage, retrieval, and real-time voice interaction.
+- Understand likely ATS performance before applying
+- Identify weak sections in tone, content, structure, and skills
+- Track multiple resume submissions by company and role
 
-- Built with Next.js App Router and TypeScript.
-- Uses Clerk for authentication and route protection.
-- Upload pipeline uses Vercel Blob with secure token generation.
-- PDF parsing and segmentation are done before retrieval.
-- Voice sessions are tracked and persisted in MongoDB.
-- Assistant responses are grounded with relevant book segments.
-
-## Product Screenshots
-
-### 1) Library Dashboard
-
-Shows uploaded books and onboarding flow for new uploads.
-
-![Bookified Library](public/assets/Screenshot%202026-03-13%20111219.png)
-
-### 2) Add New Book Flow
-
-Upload PDF, optional cover, metadata, and assistant voice selection.
-
-![Bookified Upload Form](public/assets/Screenshot%202026-03-13%20111247.png)
-
-### 3) Live Voice Interview Session
-
-Real-time status, transcript stream, and ongoing conversation with the selected book.
-
-![Bookified Voice Session](public/assets/Screenshot%202026-03-13%20111357.png)
 
 ## Core Features
 
-- PDF upload with validation (file type and size).
-- Optional manual cover upload, with auto cover generated from the first PDF page.
-- Duplicate detection using slug-based book existence checks.
-- Book text segmentation for retrieval-based responses.
-- Voice persona selection for interview style.
-- Real-time conversation states: `idle`, `connecting`, `starting`, `listening`, `thinking`, `speaking`.
-- Transcript experience with partial and final user/assistant messages.
-- Session start/end logging with duration tracking.
-- Search API for Vapi tool/function calls (`searchBook`).
+- Puter-based authentication flow for secure user session handling
+- PDF upload with drag-and-drop support
+- First-page PDF to image conversion for visual preview
+- AI-generated structured feedback in JSON format
+- ATS score plus section-wise scoring:
+	- Tone and Style
+	- Content
+	- Structure
+	- Skills
+- Historical resume list on the home page
+- Detailed review page with summary, ATS insights, and expandable recommendations
+- Data wipe route to clear uploaded files and key-value records
 
-## How It Works
+## User Flow Diagram
 
-1. User signs in with Clerk.
-2. User uploads a PDF from `/books/new`.
-3. Client parses the PDF, creates text segments, and generates/fetches cover image.
-4. Files are uploaded to Vercel Blob via `/api/upload`.
-5. Book metadata and segments are stored in MongoDB.
-6. User opens `/books/[slug]` and starts a voice session.
-7. Vapi calls `/api/vapi/search-book` to fetch relevant segments.
-8. Assistant responds using retrieved context from the uploaded book.
+The following diagram shows the end-to-end ResumeMind workflow:
 
-## System Flow Diagram
-
-![System Flow Diagram](public/assets/system-flow-diagram.png)
+![ResumeMind flowchart](./public/images/resumemind-flowchart.svg)
 
 
 ## Tech Stack
 
-- Framework: Next.js 16 (App Router)
-- Language: TypeScript
-- UI: React 19, Tailwind CSS, shadcn/ui, Sonner
-- Auth: Clerk
-- Database: MongoDB + Mongoose
-- File Storage: Vercel Blob
-- Voice: Vapi Web SDK + ElevenLabs voices
-- Validation: Zod + React Hook Form
+- React 19
+- React Router 7 (framework mode)
+- TypeScript
+- Zustand (state management)
+- Tailwind CSS v4
+- React Dropzone
+- pdfjs-dist (PDF rendering/conversion)
+- Puter SDK (Auth, Filesystem, AI, KV)
 
-## Key Project Structure
+## Architecture Notes
 
-```text
-app/
-  (root)/
-    page.tsx                 # Library page
-    books/new/page.tsx       # Upload flow
-    books/[slug]/page.tsx    # Voice interview page
-  api/
-    upload/route.ts          # Blob upload token generation
-    vapi/search-book/route.ts
+- App state and Puter service wrappers live in `app/lib/puter.ts`
+- Resume analysis prompt and response schema are defined in `constants/index.ts`
+- PDF conversion utility is implemented in `app/lib/pdf2img.ts`
+- Route map is defined in `app/routes.ts`
 
-components/
-  UploadForm.tsx
-  VapiControls.tsx
-  Transcript.tsx
+## Routes
 
-hooks/
-  useVapi.ts
+- `/` Home dashboard with previously analyzed resumes
+- `/auth` Authentication page
+- `/upload` Resume upload and analysis workflow
+- `/resume/:id` Detailed feedback view for one resume
+- `/wipe` Utility page to clear stored app data
 
-lib/actions/
-  book.actions.ts
-  session.actions.ts
+## Local Development
 
-database/models/
-  book.model.ts
-  book-segment.model.ts
-  voice-session.model.ts
-```
+### Prerequisites
 
-## Environment Variables
+- Node.js 20+
+- npm
+- Internet access (required to load Puter script)
+- A Puter account for sign-in
 
-Create a `.env` file in the root with:
-
-```env
-MONGODB_URI=
-bookified_READ_WRITE_TOKEN=
-NEXT_PUBLIC_VAPI_API_KEY=
-NEXT_PUBLIC_ASSISTANT_ID=
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-```
-
-## Run Locally
+### Install
 
 ```bash
 npm install
+```
+
+### Run in Development
+
+```bash
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open http://localhost:5173 in your browser.
 
-## Build and Lint
+### Type Check
+
+```bash
+npm run typecheck
+```
+
+### Production Build
 
 ```bash
 npm run build
-npm run lint
+npm run start
 ```
 
-## API Endpoints
+## Deployment
 
-- `POST /api/upload`: Authenticated upload token flow for Vercel Blob.
-- `GET /api/vapi/search-book`: Health check endpoint.
-- `POST /api/vapi/search-book`: Handles Vapi tool/function calls and returns relevant book context.
+### Vercel
 
-## Engineering Highlights
+This repo includes `vercel.json` configured with:
 
-- Clean separation of concerns between UI, hooks, server actions, and API routes.
-- Defensive request parsing and validation in tool-call endpoint.
-- Fallback retrieval strategy (text search first, regex fallback).
-- Error-aware call lifecycle management for robust real-time UX.
+- Build command: `npm run build`
+- Output directory: `build/client`
+- SPA rewrite fallback to `index.html`
 
-## Next Improvements
+### Docker
 
-- Add usage quotas and subscription limits.
-- Add automated tests (unit + integration).
-- Add semantic embedding search for better long-context retrieval.
-- Add analytics dashboard for user reading/interview behavior.
+```bash
+docker build -t resumemind .
+docker run -p 3000:3000 resumemind
+```
+
+## Feedback Schema (High Level)
+
+The AI response is expected as JSON with this shape:
+
+- `overallScore`
+- `ATS` with score and tips
+- `toneAndStyle` with score and detailed tips
+- `content` with score and detailed tips
+- `structure` with score and detailed tips
+- `skills` with score and detailed tips
+
+## Project Structure
+
+```text
+app/
+	components/      UI building blocks (cards, gauges, accordions, sections)
+	lib/             Puter wrappers, utilities, PDF conversion
+	routes/          Route-level pages (home, auth, upload, resume, wipe)
+constants/         Prompt templates and response format contract
+public/            Static assets and PDF worker
+types/             Shared TypeScript declarations
+```
+
+## Known Constraints
+
+- AI analysis quality depends on the resume content and job description quality
+- Current PDF preview conversion uses page 1 only
+- The app depends on Puter APIs being available in the client runtime
+
+## Roadmap Ideas
+
+- Multi-page preview and section highlighting on the resume image
+- Side-by-side comparison across versions of the same resume
+- Export feedback to PDF or shareable report links
+- Team or mentor review workflows
+
+## License
+
+No license file is currently included. Add a `LICENSE` file if you plan to distribute publicly.
