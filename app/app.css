@@ -20,11 +20,11 @@
 
 html,
 body {
-  @apply bg-white;
+  @apply bg-white overflow-x-hidden;
 }
 
 main {
-  @apply min-h-screen pt-10;
+  @apply min-h-screen pt-10 overflow-x-hidden;
 }
 h1 {
   @apply max-sm:text-[3rem] text-6xl  text-gradient leading-tight xl:tracking-[-2px] font-semibold;
